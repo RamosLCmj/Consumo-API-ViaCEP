@@ -11,21 +11,28 @@ export function CadastroUsuario() {
     const [bairro, setBairro] = useState('')
     const [cidade, setCidade] = useState('')
     const [estado, setEstado] = useState('')
-    const [enderecos, setEnderecos] = useState([]) // Endereços cadastrados
+    const [enderecos, setEnderecos] = useState([]) 
 
-    // Limita o input do CEP a números e até 8 caracteres
+    function clearForm(){
+        setName('')
+        setEmail('')
+        setCEP('')
+        setLogradouro('')
+        setBairro('')
+        setCidade('')
+        setEstado('')
+    }
+    
     function limitCepInput(event) {
         let input = event.target
-        input.value = input.value.replace(/[^0-9]/g, '').slice(0, 8) // Remove qualquer caractere não numérico
+        input.value = input.value.replace(/[^0-9]/g, '').slice(0, 8) 
     }
 
-    // Função para validar o CEP
     function isValidCep(cep) {
-        const cepPattern = /^\d{8}$/ // CEP deve ter exatamente 8 dígitos numéricos
+        const cepPattern = /^\d{8}$/ 
         return cepPattern.test(cep)
     }
 
-    // Função que será chamada quando o campo CEP perder o foco (onBlur)
     async function handleCepBlur() {
         if (!isValidCep(cep)) {
             setErrorMessage('O CEP deve conter 8 dígitos.') 
@@ -34,17 +41,14 @@ export function CadastroUsuario() {
 
         setErrorMessage('') 
         try {
-            
             const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`)
             const data = await response.json()
 
-            
             if (data.erro) {
                 setErrorMessage('CEP não encontrado!')
                 return
             }
 
-            
             setLogradouro(data.logradouro)
             setBairro(data.bairro)
             setCidade(data.localidade)
@@ -57,15 +61,6 @@ export function CadastroUsuario() {
     }
 
     async function handleCadaster() {
-        let cadasterObject = {
-            name: name,
-            email: email,
-            cep: cep
-        }
-
-        console.log(cadasterObject)
-
-        
         if (!isValidCep(cep)) {
             setErrorMessage('O CEP deve conter 8 dígitos.')
             return 
@@ -81,24 +76,24 @@ export function CadastroUsuario() {
             })
 
             const data = await response.json()
-            console.log(data)
 
-            
-            setLogradouro(data.logradouro)
-            setBairro(data.bairro)
-            setCidade(data.localidade)
-            setEstado(data.uf)
-
-            
             const novoEndereco = {
+                name: name,
+                email: email,
+                cep: cep,
                 logradouro: data.logradouro,
                 bairro: data.bairro,
                 cidade: data.localidade,
                 estado: data.uf
             }
 
-            setEnderecos([...enderecos, novoEndereco]) 
+            setEnderecos(prevEnderecos => [...prevEnderecos, novoEndereco])
             console.log(enderecos)
+
+            setTimeout(() => {
+                clearForm()
+                setSucessMessage('')
+            }, 1500)
 
         } catch (error) {
             console.error('Erro ao buscar o CEP:', error)
@@ -121,7 +116,7 @@ export function CadastroUsuario() {
                     </div>
                     <div className="input-wrapper">
                         <label htmlFor="cep">CEP: </label>
-                        <input type="text" name="cep" id="cep" onChange={(event) => setCEP(event.target.value)} value={cep} onInput={limitCepInput} onBlur={handleCepBlur} />
+                        <input type="text" name="cep" id="cep" onChange={(event) => setCEP(event.target.value)} value={cep} onInput={limitCepInput} onBlur={handleCepBlur}  />
                         {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
                     </div>
                     <div className="input-wrapper">
@@ -129,7 +124,7 @@ export function CadastroUsuario() {
                         <input type="text" name="road" id="road" onChange={(event) => setLogradouro(event.target.value)} value={logradouro}  />
                     </div>
                     <div className="input-wrapper">
-                        <label htmlFor="neighborhood">Bairro: </label>
+                        <label htmlFor="neighborhood">Bairro: </label>  
                         <input type="text" name="neighborhood" id="neighborhood" onChange={(event) => setBairro(event.target.value)} value={bairro} />
                     </div>
                     <div className="input-wrapper">
@@ -140,18 +135,17 @@ export function CadastroUsuario() {
                         <label htmlFor="state">Estado: </label>
                         <input type="text" name="state" id="state" onChange={(event) => setEstado(event.target.value)} value={estado}  />
                     </div>
-                    <button className="btnSubmit" type="button" onClick={handleCadaster}>
+                    <button className="btnSubmit" type="button" onClick={handleCadaster} >
                         Cadastrar
                     </button>
                     
-                    {/* Exibir os endereços cadastrados */}
                     {enderecos.length > 0 && (
                         <div className="enderecos">
                             <h3>Endereços cadastrados:</h3>
                             <ul>
                                 {enderecos.map((endereco, index) => (
                                     <li key={index}>
-                                        {`Olá, me chamo ${name}, e atualmente estou residindo no CEP ${cep}`}
+                                        {`Olá, me chamo ${endereco.name}, e atualmente estou residindo no CEP ${endereco.cep}.`}
                                     </li>
                                 ))} 
                             </ul> 
@@ -160,5 +154,5 @@ export function CadastroUsuario() {
                 </div>
             </div>
         </>
-    );
+    )
 }
